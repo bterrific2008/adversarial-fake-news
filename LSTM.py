@@ -10,11 +10,18 @@ import os
 import getEmbeddings2
 import matplotlib.pyplot as plt
 import scikitplot.plotters as skplt
+import pickle
 
 
 top_words = 5000
 epoch_num = 5
 batch_size = 64
+
+def save_classifier(classifier, classifier_fname):
+    classifier_file = open(classifier_fname, 'wb')
+    pickle.dump(classifier, classifier_file)
+    classifier_file.close()
+
 
 def plot_cmat(yte, ypred):
     '''Plotting confusion matrix'''
@@ -38,7 +45,7 @@ x_train = []
 for x in xtr:
     x_train.append(x.split())
     for word in x_train[-1]:
-        cnt[word] += 1  
+        cnt[word] += 1
 
 # Storing most common words
 most_common = cnt.most_common(top_words + 1)
@@ -112,3 +119,5 @@ print("Accuracy= %.2f%%" % (scores[1]*100))
 # Draw the confusion matrix
 y_pred = model.predict_classes(X_test)
 plot_cmat(y_test, y_pred)
+
+save_classifier(model, "lstm_model.pickle")
