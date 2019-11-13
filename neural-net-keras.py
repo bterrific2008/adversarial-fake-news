@@ -1,7 +1,7 @@
 from getEmbeddings import getEmbeddings
 import matplotlib.pyplot as plt
 import numpy as np
-import keras
+import keras, pickle
 from keras import backend as K
 from keras.utils import np_utils
 from keras.models import Sequential
@@ -10,6 +10,12 @@ from keras.optimizers import SGD
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 import scikitplot.plotters as skplt
+
+
+def save_classifier(classifier, classifier_fname):
+    classifier_file = open(classifier_fname, 'wb')
+    pickle.dump(classifier, classifier_file)
+    classifier_file.close()
 
 
 def plot_cmat(yte, ypred):
@@ -42,7 +48,7 @@ def baseline_model():
 
     # gradient descent
     sgd = SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-    
+
     # configure the learning process of the model
     model.compile(loss='categorical_crossentropy', optimizer=sgd, metrics=['accuracy'])
     return model
@@ -64,5 +70,7 @@ print("Accuracy = " + format(score[1]*100, '.2f') + "%")   # 92.69%
 
 probabs = model.predict_proba(x_test)
 y_pred = np.argmax(probabs, axis=1)
- 
+
 plot_cmat(y_test, y_pred)
+
+save_classifier(model, "neural-net-keras_model.pickle")

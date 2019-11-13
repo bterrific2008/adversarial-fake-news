@@ -13,6 +13,12 @@ TRAIN_STEP = 20000
 tensorflow_tmp = "tmp_tensorflow/three_layer2"
 
 
+def save_classifier(classifier, classifier_fname):
+    classifier_file = open(classifier_fname, 'wb')
+    pickle.dump(classifier, classifier_file)
+    classifier_file.close()
+
+
 def plot_cmat(yte, ypred):
     '''Plotting confusion matrix'''
     skplt.plot_confusion_matrix(yte,ypred)
@@ -58,7 +64,7 @@ def model_fn(features, labels, mode):
 
     if mode == tf.estimator.ModeKeys.PREDICT:
         return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
-    
+
     # Calculate Loss for TRAIN and EVAL
     loss = tf.losses.sparse_softmax_cross_entropy(labels=labels, logits=logits)
 
@@ -69,7 +75,7 @@ def model_fn(features, labels, mode):
             loss=loss, global_step=tf.train.get_global_step())
         return tf.estimator.EstimatorSpec(\
             mode=mode, loss=loss, train_op=train_op)
-    
+
     # Add evaluation metrics
     eval_metric_ops = {
         "accuracy": tf.metrics.accuracy(\
@@ -95,7 +101,7 @@ def main():
     tensors_to_log = {"probabilities": "softmax_tensor"}
     logging_hook = tf.train.LoggingTensorHook(
         tensors=tensors_to_log, every_n_iter=200)
-    
+
     # Train the model
     train_input_fn = tf.estimator.inputs.numpy_input_fn(
         x={"x": train_data},
@@ -107,7 +113,7 @@ def main():
         input_fn=train_input_fn,
         steps=TRAIN_STEP,
         hooks=[logging_hook])
-    
+
     # Evaluate the model and print results
     eval_input_fn = tf.estimator.inputs.numpy_input_fn(
         x={"x": eval_data},
@@ -116,7 +122,7 @@ def main():
         shuffle=False)
     eval_results = classifier.evaluate(input_fn=eval_input_fn)
     print(eval_results)   # 81.42%
-    
+
     # Draw the confusion matrix
     predict_input_fn = tf.estimator.inputs.numpy_input_fn(
         x={"x": eval_data},
@@ -125,6 +131,8 @@ def main():
     predict_results = classifier.predict(input_fn=predict_input_fn)
     predict_labels = [label["classes"] for label in predict_results]
     plot_cmat(eval_labels, predict_labels)
+
+    save_classifier(classifier, 'neural-net-tf_model.pickle')
 
 
 if __name__ == "__main__":
