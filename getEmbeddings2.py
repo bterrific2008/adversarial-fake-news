@@ -26,8 +26,10 @@ def cleanup(text):
 def constructLabeledSentences(data):
     sentences = []
     for index, row in data.iteritems():
-        sentences.append(LabeledSentence(utils.to_unicode(row).split(), ['Text' + '_%s' % str(index)]))
+        sentences.append(
+            LabeledSentence(utils.to_unicode(row).split(), ['Text' + '_%s' % str(index)]))
     return sentences
+
 
 def clean_test_data(path):
     data = pd.read_csv(path)
@@ -41,16 +43,12 @@ def clean_test_data(path):
     for i in range(len(data)):
         data.loc[i, 'text'] = cleanup(data.loc[i, 'text'])
 
-    data = data.sample(frac=1).reset_index(drop=True)
-
-    x = data.loc[:,'text'].values
-    np.save('test_data.npy',x)
+    x = data.loc[:, 'text'].values
+    np.save('test_data.npy', x)
 
 
-
-def clean_data(path = 'datasets/train.csv'):
-
-    vector_dimension=300
+def clean_data(path='datasets/train.csv'):
+    vector_dimension = 300
 
     data = pd.read_csv(path)
 
@@ -58,15 +56,15 @@ def clean_data(path = 'datasets/train.csv'):
     for i in range(len(data)):
         if data.loc[i, 'text'] != data.loc[i, 'text']:
             missing_rows.append(i)
-    data = data.drop(missing_rows).reset_index().drop(['index','id'],axis=1)
+    data = data.drop(missing_rows).reset_index().drop(['index', 'id'], axis=1)
 
     for i in range(len(data)):
-        data.loc[i, 'text'] = cleanup(data.loc[i,'text'])
+        data.loc[i, 'text'] = cleanup(data.loc[i, 'text'])
 
     data = data.sample(frac=1).reset_index(drop=True)
 
-    x = data.loc[:,'text'].values
-    y = data.loc[:,'label'].values
+    x = data.loc[:, 'text'].values
+    y = data.loc[:, 'label'].values
 
     data_split = int(0.8 * len(y))
 
@@ -75,7 +73,7 @@ def clean_data(path = 'datasets/train.csv'):
     ytr = y[:data_split]
     yte = y[data_split:]
 
-    np.save('xtr_shuffled.npy',xtr)
-    np.save('xte_shuffled.npy',xte)
-    np.save('ytr_shuffled.npy',ytr)
-    np.save('yte_shuffled.npy',yte)
+    np.save('xtr_shuffled.npy', xtr)
+    np.save('xte_shuffled.npy', xte)
+    np.save('ytr_shuffled.npy', ytr)
+    np.save('yte_shuffled.npy', yte)

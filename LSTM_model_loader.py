@@ -89,7 +89,8 @@ if __name__ == '__main__':
 
     # Draw the confusion matrix
     y_pred = model.predict_classes(X_test)
+    y_prob = model.predict_proba(X_test)
     text_file = open("LSTM_results.txt", "w")
-    for idx, (read, truth, pred) in enumerate(zip(xte, y_test, y_pred.flatten())):
-        text_file.write("idx: {}\n{}\ntruth: {}\npred: {}\n\n".format(idx, read, truth, pred))
+    for idx, (read, truth, pred, prob) in enumerate(zip(xte, y_test, y_pred.flatten(), y_prob.flatten())):
+        text_file.write("idx: {}\n{}\ntruth: {}\npred: {} {}\n\n".format(idx, read, truth, pred, prob))
     text_file.close()
