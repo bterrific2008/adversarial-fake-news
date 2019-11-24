@@ -55,6 +55,8 @@ for word, freq in most_common:
     word_bank[word] = id_num
     id_num += 1
 
+save_classifier(word_bank, 'word_bank.pickle')
+
 # Encode the sentences
 for news in x_train:
     i = 0
@@ -104,8 +106,9 @@ y_test = np.array(y_test)
 
 # Create the model
 embedding_vecor_length = 32
+embedding_layer = Embedding(top_words+2, embedding_vecor_length, input_length=max_review_length)
 model = Sequential()
-model.add(Embedding(top_words+2, embedding_vecor_length, input_length=max_review_length))
+model.add(embedding_layer)
 model.add(LSTM(100))
 model.add(Dense(1, activation='sigmoid'))
 model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])

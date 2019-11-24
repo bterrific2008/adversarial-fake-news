@@ -1,4 +1,5 @@
 import numpy as np
+from keras.layers import Embedding
 from keras.preprocessing import sequence
 from collections import Counter
 import argparse
@@ -7,33 +8,37 @@ import pickle
 
 top_words = 5000
 
-if __name__ == '__main__':
-    """parser = argparse.ArgumentParser(description='Use a Fake News Model')
-    parser.add_argument('-model', dest='model_name',
-                        help='The model you want to test against.')
-    parser.add_argument('-data', dest='data_fname',
-                        help='The file name of the data that you are testing against')
-    args = parser.parse_args()"""
-
-
-    """if not os.path.isfile('./xtr_shuffled.npy') or \
-            not os.path.isfile('./xte_shuffled.npy') or \
-            not os.path.isfile('./ytr_shuffled.npy') or \
-            not os.path.isfile('./yte_shuffled.npy'):
-        getEmbeddings2.clean_data()"""
-
-    print("Get Embeddings")
-    getEmbeddings2.clean_test_data('datasets/test.csv')
-
-
-    xtr = np.load('./test_data.npy')
-
+def lstm_preprocess_text(input):
     cnt = Counter()
-    x_train = []
-    for x in xtr:
-        x_train.append(x.split())
-        for word in x_train[-1]:
-            cnt[word] += 1
+    x_train = input.split()
+    for word in x_train:
+        cnt[word] += 1
+
+    # Storing most common words
+    print("Store common words")
+    word_bank = pickle.load(open("word_bank.pickle", "rb"))
+
+    # Encode the sentences
+    print("Encode sentences")
+    i = 0
+    other_train = x_train
+    while i < len(x_train):
+        if other_train[i] in word_bank:
+            other_train[i] = word_bank[other_train[i]]
+            i += 1
+        else:
+            del other_train[i]
+
+    # invert word_bank
+    inv_word_bank = {v: k for k, v in word_bank.items()}
+
+    return other_train
+
+def lstm_undo_preprocessing(input):
+    cnt = Counter()
+    x_train = input.split()
+    for word in x_train:
+        cnt[word] += 1
 
     # Storing most common words
     print("Store common words")
@@ -46,40 +51,58 @@ if __name__ == '__main__':
 
     # Encode the sentences
     print("Econde sentences")
-    for news in x_train:
-        i = 0
-        while i < len(news):
-            if news[i] in word_bank:
-                news[i] = word_bank[news[i]]
-                i += 1
-            else:
-                del news[i]
-
-    """# Delete the short news
-    print("Delete short news")
     i = 0
     while i < len(x_train):
-        if len(x_train[i]) > 10:
+        if x_train[i] in word_bank:
+            x_train[i] = word_bank[x_train[i]]
             i += 1
         else:
-            del x_train[i]"""
+            del x_train[i]
 
+    return x_train
 
+if __name__ == '__main__':
+
+    """if not os.path.isfile('./xtr_shuffled.npy') or \
+            not os.path.isfile('./xte_shuffled.npy') or \
+            not os.path.isfile('./ytr_shuffled.npy') or \
+            not os.path.isfile('./yte_shuffled.npy'):
+        getEmbeddings2.clean_data()"""
+
+    input_news = ""
+    with open('input.txt', encoding='utf-8') as file:
+        for line in file:
+            input_news += line + " "
+
+    input_news = getEmbeddings2.cleanup(input_news)
+
+    print(input_news)
+
+    cnt = Counter()
+    x_train = lstm_preprocess_text(input_news)
 
     # Truncate and pad input sequences
     print("Truncate and pad input sequences")
     max_review_length = 500
-    X_train = sequence.pad_sequences(x_train, maxlen=max_review_length)
-
+    embedding_vecor_length = 32
+    X_train = sequence.pad_sequences([x_train], maxlen=max_review_length)
 
     print("Load Model")
     model = pickle.load(open("lstm_model.pickle", "rb"))
 
-
     # Draw the confusion matrix
     print("Make predictions")
     y_pred = model.predict_classes(X_train)
+    y_pred = y_pred.flatten()[0]
     y_prob = model.predict_proba(X_train)
+    y_prob = y_prob.flatten()[0]
+    """X_adversary = X_train
+    y_prob_adversary = model.predict_proba(X_adversary)
+    y_pred_adversary = model.predict_classes(X_adversary)
+    while y_pred_adversary == y_pred:
+        # Select a word in X_train"""
+
+
     text_file = open("LSTM_test_results.txt", "w")
     for idx, (read, pred, prob) in enumerate(zip(X_train, y_pred.flatten(), y_prob.flatten())):
         text_file.write("idx: {}\n{}\npred: {} {}\n\n".format(idx, read, pred, prob))
