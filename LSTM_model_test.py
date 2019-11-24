@@ -102,6 +102,9 @@ if __name__ == '__main__':
     while y_pred_adversary == y_pred:
         # Select a word in X_train"""
 
+    embeddings = model.layers[0].get_weights()[0]
+    word_bank = pickle.load(open("word_bank.pickle", "rb"))
+    words_embeddings = {w: embeddings[idx] for w, idx in word_bank.items()}
 
     text_file = open("LSTM_test_results.txt", "w")
     for idx, (read, pred, prob) in enumerate(zip(X_train, y_pred.flatten(), y_prob.flatten())):
